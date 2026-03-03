@@ -1,0 +1,73 @@
+<input type="file" id="csvFile" accept=".csv" />
+<div id="plot" style="width:100%;height:520px;"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
+
+<script>
+const START = "2020-03-01";
+const END   = "2022-01-31";
+
+const dateCol  = "date";
+const casesCol = "new_confirmed";
+
+function monthKey(yyyy_mm_dd) {
+  return String(yyyy_mm_dd).slice(0, 7); // "YYYY-MM"
+}
+
+document.getElementById("csvFile").addEventListener("change", (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  Papa.parse(file, {
+    header: true,
+    dynamicTyping: true,
+    skipEmptyLines: true,
+    complete: ({ data }) => {
+      // Filter to date range + valid numeric cases
+      const filtered = data.filter(r =>
+        r?.[dateCol] >= START &&
+        r?.[dateCol] <= END &&
+        Number.isFinite(r?.[casesCol])
+      );
+
+      if (!filtered.length) {
+        alert("No matching rows found. Check that 'date' is YYYY-MM-DD and 'new_confirmed' is numeric.");
+        return;
+      }
+
+      // Group by month and compute mean
+      const byMonth = new Map(); // month -> {sum, n}
+      for (const r of filtered) {
+        const m = monthKey(r[dateCol]);
+        const v = r[casesCol];
+        if (!byMonth.has(m)) byMonth.set(m, { sum: 0, n: 0 });
+        const obj = byMonth.get(m);
+        obj.sum += v;
+        obj.n += 1;
+      }
+
+      const months = Array.from(byMonth.keys()).sort();
+      const monthlyAvg = months.map(m => {
+        const { sum, n } = byMonth.get(m);
+        return n ? (sum / n) : null;
+      });
+
+      Plotly.newPlot("plot", [{
+        x: months,
+        y: monthlyAvg,
+        type: "bar",
+        // Hover shows exactly what you want:
+        hovertemplate: "Month: %{x}<br>Avg daily new cases: %{y:,.0f}<extra></extra>"
+      }], {
+        title: "Monthly Average Daily New COVID-19 Cases (Mar 2020 – Jan 2022)",
+        xaxis: { title: "Month", tickangle: -45 },
+        yaxis: { title: "Avg daily new cases" },
+        margin: { t: 60, r: 20, b: 90, l: 70 }
+      }, {
+        responsive: true
+      });
+    }
+  });
+});
+</script>
