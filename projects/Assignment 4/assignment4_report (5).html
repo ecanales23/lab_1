@@ -1,0 +1,448 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+	<title>Vis & Society Assignment 4</title>
+	<link rel="stylesheet" href="https://vis-society.github.io/assignments/report.css" />
+	<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Syne+Mono&display=swap');
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #ffffff; --bg2: #f4f7fa; --gold: #b8860b;
+  --teal: #1a9a9a; --ink: #1a1a2e;
+  --muted: rgba(26,26,46,0.45); --grid: rgba(26,26,46,0.05);
+}
+body { font-family: 'Syne', sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; }
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 48px 48px; pointer-events: none;
+}
+.wrap { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 40px 40px 60px; }
+.diagram-title { font-family: 'Syne Mono', monospace; font-size: 10px; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; margin-bottom: 16px; }
+.legend-row { display: flex; gap: 24px; margin-bottom: 14px; flex-wrap: wrap; }
+.leg { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); font-family: 'Syne Mono', monospace; }
+.leg-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+#bubbleSvg { width: 100%; display: block; border-radius: 6px; background: var(--bg2); border: 1px solid rgba(26,26,46,0.08); }
+.tip { position: fixed; pointer-events: none; background: var(--ink); border: 1px solid rgba(26,26,46,0.2); border-radius: 4px; padding: 10px 14px; font-size: 12px; font-family: 'Syne', sans-serif; z-index: 999; opacity: 0; transition: opacity 0.12s; color: #f0f4ff; max-width: 210px; line-height: 1.5; }
+.tip strong { color: #f5c842; display: block; margin-bottom: 3px; }
+	</style>
+	<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;800&family=Barlow:wght@300;400&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f7f3ee;
+  --ink: #1c1512;
+  --red: #b5311a;
+  --red2: #d94020;
+  --red3: #f0b5a8;
+  --ash: #8a7f78;
+  --rule: rgba(28,21,18,0.1);
+}
+
+body {
+  font-family: 'Barlow', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+#viz-b-container .wrap {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 40px 40px 60px;
+}
+
+#viz-b-container .viz-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 10px;
+}
+
+#viz-b-container .viz-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+
+#viz-b-container .viz-note {
+  font-size: 10px;
+  color: var(--ash);
+  text-align: right;
+}
+
+/* Each state row */
+#viz-b-container .state-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 52px;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(28,21,18,0.05);
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+#viz-b-container .state-row.visible { opacity: 1; transform: translateX(0); }
+
+#viz-b-container .state-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink);
+  text-align: right;
+}
+
+#viz-b-container .state-name.critical { color: var(--red); }
+
+#viz-b-container #viz-b-container .dot-track {
+  position: relative;
+  height: 18px;
+  display: flex;
+  align-items: center;
+}
+
+#viz-b-container #viz-b-container .dot-home { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+
+#viz-b-container #viz-b-container .dot-away { display: flex; align-items: center; gap: 2px; margin-left: 4px; flex-wrap: nowrap; overflow: hidden; }
+
+#viz-b-container .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+#viz-b-container .dot.home { background: rgba(28,21,18,0.2); }
+#viz-b-container .dot.away { background: var(--red2); }
+#viz-b-container .dot.away-light { background: var(--red3); }
+
+#viz-b-container .arrow-sep {
+  width: 48px; height: 1px;
+  background: var(--red);
+  position: relative; flex-shrink: 0; margin: 0 4px;
+}
+#viz-b-container .arrow-sep::after {
+  content: '';
+  position: absolute; right: -1px; top: -3px;
+  border-left: 5px solid var(--red);
+  border-top: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+}
+
+#viz-b-container .pct-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px; font-weight: 700;
+  color: var(--red); text-align: right;
+}
+#viz-b-container .pct-label.low { color: var(--ash); font-weight: 400; }
+
+#viz-b-container .section-divider { padding: 10px 0 6px; border-bottom: 1px solid var(--rule); margin: 4px 0; }
+#viz-b-container .section-divider span {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--ash);
+  margin-left: 152px;
+}
+
+#viz-b-container .tip2 {
+  position: fixed; pointer-events: none;
+  background: var(--ink); color: var(--bg);
+  border-radius: 3px; padding: 10px 14px;
+  font-size: 12px; z-index: 999;
+  opacity: 0; transition: opacity 0.12s;
+  max-width: 220px; font-family: 'Barlow', sans-serif;
+}
+#viz-b-container .tip2 strong { color: var(--red2); display: block; margin-bottom: 3px; }
+	</style>
+</head>
+
+<body>
+	<header>
+		<h1>
+			<small>Assignment 4</small>
+			Persuasive or Deceptive Visualization?
+		</h1>
+		<p>
+			<strong>Emily Canales</strong> — <em>eycanal@mit.edu</em>
+		</p>
+	</header>
+
+	<main>
+		<h2>Proposition: Most American women have local access to abortion care.</h2>
+
+		<section>
+			<h3>FOR the Proposition</h3>
+
+			<figure>
+				<div class="wrap">
+  <div class="diagram-title"> ABORTION out-of-state travel rate · 2020</div>
+  <div class="legend-row">
+    <div class="leg"><div class="leg-dot" style="background:#1a9a9a"></div> 0–15% travel (local access strong)</div>
+    <div class="leg"><div class="leg-dot" style="background:#d4a017"></div> 16–50% travel (moderate mobility)</div>
+    <div class="leg"><div class="leg-dot" style="background:#e8855a"></div> 51–99% travel (high mobility)</div>
+    <div class="leg">
+      <div style="display:flex;align-items:center;gap:3px">
+        <div style="width:8px;height:8px;border-radius:50%;background:rgba(26,26,46,0.3)"></div>
+        <div style="width:15px;height:15px;border-radius:50%;background:rgba(26,26,46,0.3)"></div>
+      </div>bubble size = number of women aged 15–44
+    </div>
+  </div>
+  <svg id="bubbleSvg" height="560"></svg>
+</div>
+<div class="tip" id="tip"></div>
+				<figcaption>
+					Bubble chart showing the percentage of women who traveled out-of-state to have an abortion (2020), with bubble size proportional 
+          to eligible women (ages 15–44). States with strong local access (≤15% travel) are clustered at left in teal; 
+          the largest states by female population — California, Texas, New York, Florida — all sit near 0%, visually 
+          dominating the frame and supporting the claim that most American women have access close to home.
+				</figcaption>
+			</figure>
+
+			<p>Design Decisions and Rationale:</p>
+			<ul>
+				<li><strong>Population-weighted bubble sizing (+1):</strong> Making the bubble area as estimated women aged 15–44 means populous states
+           like California and Texas visually dominate. Because these large states have very low travel rates, the chart's visual center of 
+           gravity sits firmly on the left — making the "access is local" story feel like the overwhelming national reality. However, population of eligible
+          women is a valid consideration to have when making the claim that "most women have local access to abortion care."</li>
+				<li><strong>Teal zone shading and "Strong Local Access" label (−1.5):</strong> The soft highlight over the 0–15% range and the label above
+           it add a visual component that has the reader focus more on this side of the graph. The 15% cutoff
+            was chosen because it encompasses the most populous states. A reader may not notice the framing is constructed.</li>
+				<li><strong>"High Mobility" phrase in axis label and legend  (−1):</strong> Labeling the right side of the axis "High Mobility" rather than 
+          "High Displacement" reframes out-of-state travel as an active, positive choice. The word "mobility" implies agency; it is technically 
+          accurate but rhetorically opposite to how the same travel reads in Visualization B.</li>
+			</ul>
+		</section>
+
+		<section>
+			<h3>AGAINST the Proposition</h3>
+
+			<figure>
+				<div id="viz-b-container">
+				<div class="wrap">
+
+  <div class="viz-header">
+    <span class="viz-title">% of residents forced to travel out of state for  ABORTION care · 2020</span>
+
+  </div>
+
+  <div id="dotChart"></div>
+
+</div>
+
+<div class="tip2" id="tip2"></div>
+				</div>
+				<figcaption>
+					Isotype dot chart showing the percentage of residents forced to travel out of state for abortion care, sorted from highest to lowest (2020). 
+          Each dot represents 10% of women who had abortions; red dots mark those who had to leave their state. Section dividers group states by severity of displacement. 
+				</figcaption>
+			</figure>
+
+			<p>Design Decisions and Rationale:</p>
+			<ul>
+				<li><strong>Worst-first sort order (−2):</strong> Ordering states from highest to lowest displacement means Missouri's near-complete-red row
+           is the first thing the reader sees. This anchors the reader's reference point at the extreme end of the scale, making moderate displacement 
+           rates (20–40%) feel normal and the low-travel states at the bottom feel like exceptions — the opposite of how Visualization A frames the same 
+           data.</li>
+				<li><strong>Label phrasing and arrow separator (−1):</strong> The word "forced" in the chart title and the rightward arrow between home 
+          and away dots encodes travel as an act of expulsion. The arrow exists purely to 
+          suggest directionality and loss. Calling the same travel "mobility" (Viz A) vs. "forced displacement" (Viz B) is the central  
+          rhetoric difference of the pair.</li>
+				<li><strong>Equal state representation (+0.5): </strong> States like Missouri are the same weight compared to a more populous states like California. 
+          By treating each state the same, the chart does not account for population differences. However, it does possibly reflect state policies that could affect 
+          access to abortions.
+          .</li>
+			</ul>
+		</section>
+
+		<section>
+			<h2>Final Reflection</h2>
+			<p>
+				Making these two visualizations was challenging in a couple aspects. The first challenge was picking data to work with that was versatile enough to tell the opposite story. However, even after experimenting with a couple variables it was hard to change gears and completely change my design decisions to show the complete opposite of what I had been focused on. It was also very hard not to use deceitful design methods; however I believe the final visualization  to be ethical. I did not alter any of the numbers and both visualizations use the same data but Viz A represents population while Viz B holds states to an equal weight yet they produce different verdicts. Both are valid conclusions from the data.
+ 	<br>I was surprised on how the boundary between earnest and deceptive design shifted as I completed this assignment. I had initially assumed that 
+        deceptive visualization meant fabricating data or using obviously distorted scales. What I found instead is that some of the most effective persuasion can be subtle:
+         a zone label that defines "strong" access at a threshold that happens to include the largest states; an axis label that says "mobility" instead of "displacement"; 
+         a sort order that puts the most alarming cases first. I would say that going forward an ethical visualization is one that represents data honestly, accurately, and contextually, avoids misleading the audience, ensures transparency in data sources, and prioritizes accessibility. The representation does not necessarily need to be unbiased but disclosure and no distortion methods are necessary. Bounds to keep in mind on how to distinguish between acceptable and misleading design choices are all about intentions. Choosing a framing that reflects a true analytical viewpoint (population-weighting is a legitimate and defendable choice), emphasizing the data that is relevant to your argument, and reinforcing that narrative with color and typography is ethical. Using design elements that suggest data relationships that don't exist, actively hiding the existence of different interpretations when you know they'd alter the reader's conclusion, and calculating thresholds specifically to produce a desired result without disclosing that are examples of choices that feel deceptive.
+However, that boundary itself is very fragile. Although the population-weighting in Viz A is justifiable, it was also selected to support a specific result. The honest response, in my opinion, is that it depends on the audience's capacity to question the decisions and the author's sincerity about making them. The placement of the chart in a campaign advertisement differs from that of a visualization in an academic article. Different ethics, could be the same image. Overall, this is a complex topic that requires a lot of discussion but I mostly believe that as long as an author is not trying to actively decieve or misrepresent data than they are generally not misleading.
+
+			</p>
+		</section>
+	</main>
+
+	<!-- Viz A script -->
+	<script>
+const data = [
+  {s:'Alabama',t:47,w:953684},{s:'Alaska',t:7,w:143478},{s:'Arizona',t:6,w:1424742},
+  {s:'Arkansas',t:37,w:578205},{s:'California',t:0,w:8021053},{s:'Colorado',t:1,w:1194949},
+  {s:'Connecticut',t:6,w:670175},{s:'Delaware',t:44,w:181646},{s:'D.C.',t:45,w:191954},
+  {s:'Florida',t:1,w:3927128},{s:'Georgia',t:5,w:2196988},{s:'Hawaii',t:2,w:257851},
+  {s:'Idaho',t:26,w:355000},{s:'Illinois',t:1,w:2470760},{s:'Indiana',t:31,w:1318293},
+  {s:'Iowa',t:12,w:594915},{s:'Kansas',t:4,w:564384},{s:'Kentucky',t:39,w:849254},
+  {s:'Louisiana',t:21,w:923810},{s:'Maine',t:5,w:234653},{s:'Maryland',t:17,w:1188353},
+  {s:'Massachusetts',t:6,w:1396800},{s:'Michigan',t:1,w:1872671},{s:'Minnesota',t:3,w:1092632},
+  {s:'Mississippi',t:44,w:581818},{s:'Missouri',t:99,w:1182828},{s:'Montana',t:3,w:198684},
+  {s:'Nebraska',t:8,w:374074},{s:'Nevada',t:4,w:614124},{s:'New Hampshire',t:23,w:247126},
+  {s:'New Jersey',t:6,w:1674394},{s:'New Mexico',t:8,w:398990},{s:'New York',t:1,w:3840217},
+  {s:'North Carolina',t:2,w:2079231},{s:'North Dakota',t:13,w:150000},{s:'Ohio',t:10,w:2214141},
+  {s:'Oklahoma',t:5,w:778505},{s:'Oregon',t:5,w:836082},{s:'Pennsylvania',t:14,w:2377551},
+  {s:'Rhode Island',t:17,w:208088},{s:'South Carolina',t:57,w:994118},{s:'South Dakota',t:84,w:165854},
+  {s:'Tennessee',t:23,w:1339744},{s:'Texas',t:8,w:6089109},{s:'Utah',t:8,w:715556},
+  {s:'Vermont',t:7,w:115789},{s:'Virginia',t:25,w:1694928},{s:'Washington',t:5,w:1543966},
+  {s:'West Virginia',t:52,w:312281},{s:'Wisconsin',t:17,w:1090789},{s:'Wyoming',t:88,w:109375}
+];
+const svg = document.getElementById('bubbleSvg');
+const W = svg.parentElement.offsetWidth || 1020;
+const H = 560;
+svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+svg.setAttribute('width',W);
+const padL=56,padR=40,padT=38,padB=48;
+const chartW=W-padL-padR, chartH=H-padT-padB;
+function bubbleColor(t){ return t<=15?'#1a9a9a':t<=50?'#d4a017':'#e8855a'; }
+const maxW=Math.max(...data.map(d=>d.w));
+function mapR(w){ return 5+Math.sqrt(w/maxW)*(62-5); }
+function mapX(t){ return padL+(t/100)*chartW; }
+[0,25,50,75,100].forEach(v=>{
+  const x=mapX(v);
+  const gl=document.createElementNS('http://www.w3.org/2000/svg','line');
+  gl.setAttribute('x1',x);gl.setAttribute('x2',x);gl.setAttribute('y1',padT);gl.setAttribute('y2',H-padB);
+  gl.setAttribute('stroke','rgba(26,26,46,0.08)');gl.setAttribute('stroke-width','1');svg.appendChild(gl);
+  const tl=document.createElementNS('http://www.w3.org/2000/svg','text');
+  tl.setAttribute('x',x);tl.setAttribute('y',H-padB+18);tl.setAttribute('text-anchor','middle');
+  tl.setAttribute('font-family','Syne Mono');tl.setAttribute('font-size','10');tl.setAttribute('fill','rgba(26,26,46,0.65)');
+  tl.textContent=v+'%';svg.appendChild(tl);
+});
+const axLbl=document.createElementNS('http://www.w3.org/2000/svg','text');
+axLbl.setAttribute('x',W/2);axLbl.setAttribute('y',H-4);axLbl.setAttribute('text-anchor','middle');
+axLbl.setAttribute('font-family','Syne Mono');axLbl.setAttribute('font-size','9');axLbl.setAttribute('letter-spacing','2');
+axLbl.setAttribute('fill','rgba(26,26,46,0.5)');
+axLbl.textContent='← MOSTLY LOCAL  **** % RESIDENTS WHO TRAVELED OUT OF STATE  ****   HIGH MOBILITY →';
+svg.appendChild(axLbl);
+const zs=document.createElementNS('http://www.w3.org/2000/svg','rect');
+zs.setAttribute('x',mapX(0));zs.setAttribute('y',padT);zs.setAttribute('width',mapX(15)-mapX(0));zs.setAttribute('height',chartH);
+zs.setAttribute('fill','rgba(26,154,154,0.06)');svg.appendChild(zs);
+const zl=document.createElementNS('http://www.w3.org/2000/svg','text');
+zl.setAttribute('x',mapX(7.5));zl.setAttribute('y',padT-10);zl.setAttribute('text-anchor','middle');
+zl.setAttribute('font-family','Syne Mono');zl.setAttribute('font-size','8');
+zl.setAttribute('fill','rgba(26,154,154,0.9)');zl.setAttribute('letter-spacing','1');
+zl.textContent='STRONG LOCAL ACCESS';svg.appendChild(zl);
+const placed=[];
+[...data].sort((a,b)=>b.w-a.w).forEach((d,i)=>{
+  const r=mapR(d.w), x=mapX(d.t);
+  let y=padT+chartH*0.5+(Math.random()-0.5)*chartH*0.35;
+  y=Math.max(padT+r+2,Math.min(H-padB-r-2,y));
+  for(let a=0;a<300;a++){
+    let ok=true;
+    for(const p of placed){
+      const dx=x-p.x,dy=y-p.y;
+      if(Math.sqrt(dx*dx+dy*dy)<r+p.r+4){
+        ok=false; y+=(y<p.y?-1:1)*(r+p.r+5-Math.abs(dy))*0.5;
+        y=Math.max(padT+r+2,Math.min(H-padB-r-2,y)); break;
+      }
+    }
+    if(ok)break;
+  }
+  placed.push({x,y,r});
+  const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+  g.style.cursor='pointer';
+  const circ=document.createElementNS('http://www.w3.org/2000/svg','circle');
+  circ.setAttribute('cx',x);circ.setAttribute('cy',y);circ.setAttribute('r',0);
+  circ.setAttribute('fill',bubbleColor(d.t));circ.setAttribute('fill-opacity','0.82');
+  circ.setAttribute('stroke','rgba(255,255,255,0.6)');circ.setAttribute('stroke-width','1.5');
+  setTimeout(()=>{ circ.style.transition='r 0.55s cubic-bezier(0.34,1.56,0.64,1)'; circ.setAttribute('r',r); },200+i*18);
+  const notable=['Missouri','Wyoming','South Dakota','California','Texas','Florida','New York','Illinois','Georgia','Michigan'].includes(d.s);
+  if(r>26||(notable&&r>10)){
+    const lbl=document.createElementNS('http://www.w3.org/2000/svg','text');
+    lbl.setAttribute('x',x);lbl.setAttribute('y',y+(r>38?4:3));lbl.setAttribute('text-anchor','middle');
+    lbl.setAttribute('font-family','Syne');lbl.setAttribute('font-weight','700');lbl.setAttribute('font-size',r>38?'11':'9.5');
+    lbl.setAttribute('fill','#000000');lbl.setAttribute('pointer-events','none');
+    lbl.textContent=d.s; g.appendChild(lbl);
+  }
+  const tip=document.getElementById('tip');
+  g.addEventListener('mouseenter',e=>{
+    tip.innerHTML=`<strong>${d.s}</strong>${d.t}% traveled out-of-state<br>~${(d.w/1000).toFixed(0)}K women aged 15–44<br><span style="font-size:10px;opacity:0.55">${d.t<=15?'Strong local access':d.t<=50?'Moderate mobility':'High cross-border mobility'}</span>`;
+    tip.style.opacity=1; circ.setAttribute('stroke','rgba(26,26,46,0.8)'); circ.setAttribute('stroke-width','2.5');
+  });
+  g.addEventListener('mousemove',e=>{ tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY-20)+'px'; });
+  g.addEventListener('mouseleave',()=>{ tip.style.opacity=0; circ.setAttribute('stroke','rgba(255,255,255,0.6)'); circ.setAttribute('stroke-width','1.5'); });
+  g.appendChild(circ); svg.appendChild(g);
+});
+</script>
+
+	<!-- Viz B script -->
+	<script>
+const dataB = [
+  {s:'Missouri',t:99},{s:'Wyoming',t:88},{s:'South Dakota',t:84},
+  {s:'South Carolina',t:57},{s:'West Virginia',t:52},{s:'D.C.',t:45},
+  {s:'Delaware',t:44},{s:'Mississippi',t:44},{s:'Alabama',t:47},
+  {s:'Kentucky',t:39},{s:'Arkansas',t:37},{s:'Indiana',t:31},
+  {s:'Idaho',t:26},{s:'Virginia',t:25},{s:'New Hampshire',t:23},
+  {s:'Tennessee',t:23},{s:'Louisiana',t:21},{s:'Wisconsin',t:17},
+  {s:'Rhode Island',t:17},{s:'Maryland',t:17},{s:'Pennsylvania',t:14},
+  {s:'North Dakota',t:13},{s:'Iowa',t:12},{s:'Ohio',t:10},
+  {s:'Nebraska',t:8},{s:'New Mexico',t:8},{s:'Texas',t:8},{s:'Utah',t:8},
+  {s:'Alaska',t:7},{s:'Vermont',t:7},{s:'Massachusetts',t:6},
+  {s:'Connecticut',t:6},{s:'Arizona',t:6},{s:'New Jersey',t:6},
+  {s:'Georgia',t:5},{s:'Maine',t:5},{s:'Oklahoma',t:5},{s:'Oregon',t:5},
+  {s:'Washington',t:5},{s:'Kansas',t:4},{s:'Nevada',t:4},
+  {s:'Minnesota',t:3},{s:'Montana',t:3},{s:'Hawaii',t:2},
+  {s:'North Carolina',t:2},{s:'Colorado',t:1},{s:'Florida',t:1},
+  {s:'Illinois',t:1},{s:'Michigan',t:1},{s:'New York',t:1},{s:'California',t:0},
+].sort((a,b)=>b.t-a.t);
+
+const containerB = document.getElementById('dotChart');
+const tip2 = document.getElementById('tip2');
+
+const sections = [
+  {threshold:50, label:'MAJORITY DISPLACED — more than half had to leave'},
+  {threshold:20, label:'SIGNIFICANT DISPLACEMENT — 1 in 5 or more'},
+  {threshold:5,  label:'MODERATE TRAVEL — 1 in 20 or more'},
+  {threshold:0,  label:'MOSTLY LOCAL ACCESS'},
+];
+
+let lastSection = -1;
+
+dataB.forEach((d,i) => {
+  const sec = sections.findIndex(s => d.t >= s.threshold);
+  if (sec !== lastSection) {
+    const div = document.createElement('div');
+    div.className = 'section-divider';
+    div.innerHTML = `<span>${sections[sec].label}</span>`;
+    containerB.appendChild(div);
+    lastSection = sec;
+  }
+  const homeCount = 10 - Math.round(d.t/10);
+  const row = document.createElement('div');
+  row.className = 'state-row';
+  const isCritical = d.t >= 50;
+  
+  const awayCount = Math.round(d.t/10);
+  const homeDots = Array(homeCount).fill('<div class="dot home"></div>').join('');
+  const awayDots = awayCount > 0 ? Array(Math.min(awayCount,10)).fill(`<div class="dot away${d.t<15?' away-light':''}"></div>`).join('') : '';
+
+  row.innerHTML = `
+    <div class="state-name ${isCritical?'critical':''}">${d.s}</div>
+    <div class="dot-track">
+      <div class="dot-home">${homeDots}</div>
+      ${awayCount>0?`<div class="arrow-sep"></div><div class="dot-away">${awayDots}</div>`:''}
+    </div>
+    <div class="pct-label ${d.t<15?'low':''}">${d.t}%</div>
+  `;
+
+  row.addEventListener('mouseenter', e => {
+    tip2.innerHTML = `<strong>${d.s}</strong>${d.t}% left the state<br>${100-d.t}% accessed care locally`;
+    tip2.style.opacity = 1;
+  });
+  row.addEventListener('mousemove', e => { tip2.style.left=(e.clientX+14)+'px'; tip2.style.top=(e.clientY-20)+'px'; });
+  row.addEventListener('mouseleave', () => { tip2.style.opacity = 0; });
+
+  containerB.appendChild(row);
+  setTimeout(() => row.classList.add('visible'), 100 + i*25);
+});
+</script>
+
+</body>
+</html>
